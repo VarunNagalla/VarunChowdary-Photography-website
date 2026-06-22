@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import hero from "@/assets/hero.jpg";
 import portrait from "@/assets/portrait.jpg";
 import photo1 from "@/assets/photo-1.jpg";
@@ -35,7 +37,7 @@ type Photo = {
   h: number;
 };
 
-const photos: Photo[] = [
+const fallbackPhotos: Photo[] = [
   { src: photo1, alt: "Portrait in window light", title: "In Half-Light", place: "Lisbon", year: "2024", w: 1024, h: 1024 },
   { src: photo2, alt: "Misty mountains at dawn", title: "Morning, Untitled", place: "Dolomites", year: "2023", w: 1280, h: 896 },
   { src: photo3, alt: "Brutalist architecture", title: "Concrete & Sun", place: "São Paulo", year: "2024", w: 960, h: 1280 },
@@ -46,12 +48,33 @@ const photos: Photo[] = [
   { src: photo8, alt: "Hands of a craftsman", title: "Hands That Remember", place: "Florence", year: "2022", w: 1024, h: 1024 },
 ];
 
+async function fetchGallery(): Promise<Photo[]> {
+  const { data, error } = await supabase
+    .from("photos")
+    .select("title, place, year, image_url, alt_text, width, height")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((p) => ({
+    src: p.image_url,
+    alt: p.alt_text || p.title,
+    title: p.title,
+    place: p.place,
+    year: p.year,
+    w: p.width ?? 1200,
+    h: p.height ?? 1200,
+  }));
+}
+
 function Index() {
+  const { data } = useQuery({ queryKey: ["public-photos"], queryFn: fetchGallery });
+  const photos = data && data.length > 0 ? data : fallbackPhotos;
+
   return (
     <div className="min-h-screen bg-paper text-ink font-body">
       <Header />
       <Hero />
-      <Work />
+      <Work photos={photos} />
       <About />
       <Contact />
       <Footer />
@@ -132,8 +155,7 @@ function Hero() {
   );
 }
 
-function Work() {
-  // split into 3 columns for masonry (no JS sizing needed)
+function Work({ photos }: { photos: Photo[] }) {
   const cols: Photo[][] = [[], [], []];
   photos.forEach((p, i) => cols[i % 3].push(p));
 
@@ -142,14 +164,14 @@ function Work() {
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16 md:mb-24">
           <div>
-            <p className="eyebrow mb-4">Selected · 2022 — 2024</p>
+            <p className="eyebrow mb-4">Selected · ongoing</p>
             <h2 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight">
               A small archive,<br />
               <em className="italic text-ink-soft">carefully chosen.</em>
             </h2>
           </div>
           <p className="md:max-w-xs text-sm text-ink-soft leading-relaxed">
-            Eight frames from a larger ongoing body of work. Full series available on request.
+            Frames from a larger ongoing body of work. Full series available on request.
           </p>
         </div>
 
@@ -157,7 +179,7 @@ function Work() {
           {cols.map((col, ci) => (
             <div key={ci} className="flex flex-col gap-6 md:gap-8">
               {col.map((p, pi) => (
-                <PhotoCard key={pi} photo={p} index={ci * 3 + pi} />
+                <PhotoCard key={`${ci}-${pi}-${p.title}`} photo={p} index={ci * 3 + pi} />
               ))}
             </div>
           ))}
@@ -183,10 +205,10 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
       <figcaption className="mt-4 flex items-baseline justify-between gap-4">
         <div>
           <p className="font-display italic text-xl text-ink">{photo.title}</p>
-          <p className="eyebrow mt-1">{photo.place}</p>
+          {photo.place && <p className="eyebrow mt-1">{photo.place}</p>}
         </div>
         <p className="text-xs text-ink-soft tabular-nums">
-          № {String(index + 1).padStart(2, "0")} · {photo.year}
+          № {String(index + 1).padStart(2, "0")}{photo.year ? ` · ${photo.year}` : ""}
         </p>
       </figcaption>
     </figure>
