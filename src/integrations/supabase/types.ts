@@ -17,10 +17,12 @@ export type Database = {
       photos: {
         Row: {
           alt_text: string
+          caption: string
           created_at: string
           height: number | null
           id: string
           image_url: string
+          is_published: boolean
           place: string
           sort_order: number
           storage_path: string | null
@@ -31,10 +33,12 @@ export type Database = {
         }
         Insert: {
           alt_text?: string
+          caption?: string
           created_at?: string
           height?: number | null
           id?: string
           image_url: string
+          is_published?: boolean
           place?: string
           sort_order?: number
           storage_path?: string | null
@@ -45,10 +49,12 @@ export type Database = {
         }
         Update: {
           alt_text?: string
+          caption?: string
           created_at?: string
           height?: number | null
           id?: string
           image_url?: string
+          is_published?: boolean
           place?: string
           sort_order?: number
           storage_path?: string | null
@@ -56,6 +62,36 @@ export type Database = {
           updated_at?: string
           width?: number | null
           year?: string
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          image_url: string | null
+          section_key: string
+          storage_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          section_key: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          section_key?: string
+          storage_path?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
