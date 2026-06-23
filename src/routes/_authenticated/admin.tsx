@@ -217,7 +217,6 @@ function AdminPage() {
         <div className="mx-auto max-w-[1400px] px-6 md:px-10 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/" className="font-display text-xl">Varun Nagalla</Link>
-            <span className="text-[0.7rem] tracking-[0.28em] uppercase text-ink-soft">Studio Admin</span>
           </div>
           <div className="flex items-center gap-6 text-[0.78rem] tracking-[0.22em] uppercase">
             <Link to="/" className="text-ink-soft hover:text-ink">View site</Link>
