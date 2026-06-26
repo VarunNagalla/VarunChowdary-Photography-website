@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient },
-  basepath: "/VarunChowdary-Photography-website",
+  basepath: import.meta.env.VITE_ROUTER_BASEPATH ?? "/VarunChowdary-Photography-website",
   scrollRestoration: true,
   defaultPreloadStaleTime: 0,
 });

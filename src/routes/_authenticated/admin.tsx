@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
@@ -502,8 +502,15 @@ function ContentSectionEditor({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const loadedRowRef = useRef<SiteContent | undefined>(undefined);
 
+  // Reset form when the user switches to a different section (config.key changes).
+  // The component is already keyed by config.key so this fires on every mount — that
+  // is intentional: it populates the form once from the initial row, then leaves the
+  // user's edits alone while they type.
   useEffect(() => {
+    if (loadedRowRef.current === row) return;
+    loadedRowRef.current = row;
     setValues(getInitialContentValues(config, row));
     setFile(null);
     setMessage(null);
