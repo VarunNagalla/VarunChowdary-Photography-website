@@ -8,6 +8,7 @@ import { ADMIN_EMAIL, defaultSettings, type SiteSettings } from "@/lib/site-conf
 type Photo = Tables<"photos">;
 type SiteContent = Tables<"site_content">;
 type AdminTab = "content" | "design" | "gallery";
+type ContentSectionKey = ContentSectionConfig["key"];
 type PhotosResult = { photos: Photo[]; total: number };
 
 type ContentField = {
@@ -261,6 +262,9 @@ function AdminPage() {
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("content");
+  const [activeContentSection, setActiveContentSection] = useState<ContentSectionKey>("hero");
+  const selectedContentConfig =
+    contentSections.find((section) => section.key === activeContentSection) ?? contentSections[0];
 
   useEffect(() => {
     (async () => {
@@ -304,7 +308,9 @@ function AdminPage() {
       <main className="mx-auto max-w-[1400px] px-6 md:px-10 py-12 md:py-16">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
           <div>
-            <p className="eyebrow mb-3">Signed in as {adminEmail}</p>
+            <p className="eyebrow mb-3">
+              Signed in as {adminEmail === ADMIN_EMAIL ? "site owner" : "restricted user"}
+            </p>
             <h1 className="font-display text-5xl md:text-6xl leading-none">Website admin</h1>
           </div>
           <p className="text-sm text-ink-soft max-w-sm">
@@ -340,16 +346,32 @@ function AdminPage() {
             ) : contentLoading ? (
               <p className="text-ink-soft">Loading content</p>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {contentSections.map((section) => (
+              <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
+                <div className="border border-rule p-3 flex flex-col gap-2 self-start">
+                  {contentSections.map((section) => (
+                    <button
+                      key={section.key}
+                      type="button"
+                      onClick={() => setActiveContentSection(section.key)}
+                      className={`px-4 py-3 text-left text-[0.72rem] tracking-[0.18em] uppercase transition ${
+                        activeContentSection === section.key
+                          ? "bg-ink text-paper"
+                          : "text-ink-soft hover:bg-paper-soft hover:text-ink"
+                      }`}
+                    >
+                      {section.title}
+                    </button>
+                  ))}
+                </div>
+                {selectedContentConfig && (
                   <ContentSectionEditor
-                    key={section.key}
-                    config={section}
-                    row={siteContent.find((item) => item.section_key === section.key)}
+                    key={selectedContentConfig.key}
+                    config={selectedContentConfig}
+                    row={siteContent.find((item) => item.section_key === selectedContentConfig.key)}
                     canEdit={!!isAdmin}
                     onDone={() => qc.invalidateQueries({ queryKey: ["admin-site-content"] })}
                   />
-                ))}
+                )}
               </div>
             )}
           </section>

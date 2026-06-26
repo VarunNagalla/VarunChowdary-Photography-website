@@ -12,8 +12,6 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +24,14 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL) {
+    const form = e.currentTarget as HTMLFormElement;
+    const data = new FormData(form);
+    const email = String(data.get("email") ?? "")
+      .trim()
+      .toLowerCase();
+    const password = String(data.get("password") ?? "");
+
+    if (email !== ADMIN_EMAIL) {
       setError("This admin area is restricted to the site owner.");
       return;
     }
@@ -66,21 +71,21 @@ function AuthPage() {
             <label className="block">
               <span className="eyebrow block mb-2">Email</span>
               <input
+                name="email"
                 type="email"
                 required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="username"
                 className="w-full bg-transparent border-b border-rule focus:border-ink outline-none py-3 text-lg font-display"
               />
             </label>
             <label className="block">
               <span className="eyebrow block mb-2">Password</span>
               <input
+                name="password"
                 type="password"
                 required
                 minLength={8}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
                 className="w-full bg-transparent border-b border-rule focus:border-ink outline-none py-3 text-lg font-display"
               />
             </label>
