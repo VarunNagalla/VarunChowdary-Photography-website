@@ -477,7 +477,7 @@ function TabButton({
 
 function ErrorPanel({ title, message }: { title: string; message: string }) {
   return (
-    <div className="border border-red-700/30 bg-red-50 p-6 text-red-900">
+    <div className="border border-red-500/25 bg-red-950/30 p-6 text-red-300">
       <p className="font-display text-xl mb-2">{title}</p>
       <p className="text-sm leading-relaxed">{message}</p>
     </div>
@@ -607,8 +607,8 @@ function ContentSectionEditor({
           ),
         )}
       </div>
-      {message && <p className="text-sm text-green-700">{message}</p>}
-      {err && <p className="text-sm text-red-700">{err}</p>}
+      {message && <p className="text-sm text-green-400">{message}</p>}
+      {err && <p className="text-sm text-red-400">{err}</p>}
       <button
         type="submit"
         disabled={!canEdit || busy}
@@ -712,8 +712,8 @@ function SettingsEditor({
           onChange={(seoDescription) => setValues((current) => ({ ...current, seoDescription }))}
         />
       </div>
-      {message && <p className="mt-4 text-sm text-green-700">{message}</p>}
-      {err && <p className="mt-4 text-sm text-red-700">{err}</p>}
+      {message && <p className="mt-4 text-sm text-green-400">{message}</p>}
+      {err && <p className="mt-4 text-sm text-red-400">{err}</p>}
       <button
         type="submit"
         disabled={!canEdit || busy}
@@ -859,7 +859,7 @@ function UploadForm({ onDone }: { onDone: () => void }) {
         />
       </div>
       {progress && <p className="mt-4 text-sm text-ink-soft">{progress}</p>}
-      {err && <p className="mt-4 text-sm text-red-700">{err}</p>}
+      {err && <p className="mt-4 text-sm text-red-400">{err}</p>}
       <button
         type="submit"
         disabled={busy || files.length === 0}
@@ -1045,7 +1045,7 @@ function PhotoItem({
               checked={isPublished}
               onChange={setIsPublished}
             />
-            {err && <p className="text-sm text-red-700">{err}</p>}
+            {err && <p className="text-sm text-red-400">{err}</p>}
             <div className="flex gap-2 mt-2">
               <button
                 onClick={save}
@@ -1068,7 +1068,7 @@ function PhotoItem({
               <div className="flex items-start justify-between gap-4">
                 <p className="font-display italic text-xl">{photo.title}</p>
                 <span
-                  className={`text-[0.65rem] tracking-[0.18em] uppercase ${photo.is_published ? "text-green-700" : "text-red-700"}`}
+                  className={`text-[0.65rem] tracking-[0.18em] uppercase ${photo.is_published ? "text-green-400" : "text-red-400"}`}
                 >
                   {photo.is_published ? "Shown" : "Hidden"}
                 </span>
@@ -1091,7 +1091,7 @@ function PhotoItem({
                 <button
                   onClick={remove}
                   disabled={busy}
-                  className="flex-1 border border-red-700 text-red-700 py-2 text-xs tracking-[0.22em] uppercase hover:bg-red-700 hover:text-paper disabled:opacity-50"
+                  className="flex-1 border border-red-500/60 text-red-400 py-2 text-xs tracking-[0.22em] uppercase hover:bg-red-500/20 disabled:opacity-50"
                 >
                   Delete
                 </button>

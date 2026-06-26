@@ -19,31 +19,49 @@
 }
 
 :root {
-  --background: #f4f0e8;
-  --foreground: #15110d;
-  --paper: #f4f0e8;
-  --paper-soft: #e8dfd2;
-  --ink: #15110d;
-  --ink-soft: #51483f;
-  --rule: rgba(21, 17, 13, 0.14);
-  --muted: #e8dfd2;
-  --muted-foreground: #70675d;
+  /* ── Dark cinema palette ─────────────────────────────────── */
+  --bg: #0b0a09;
+  --bg-card: #141210;
+  --bg-raised: #1b1815;
+  --fg: #f2ede5;
+  --fg-soft: #8a8278;
+  --fg-muted: #4e4840;
+  --accent: #c8a46a;
+  --accent-bg: rgba(200, 164, 106, 0.1);
+  --hr: rgba(242, 237, 229, 0.09);
+  --hr-strong: rgba(242, 237, 229, 0.18);
+
+  /* ── Legacy aliases (keep admin / auth / shadcn working) ─── */
+  --background: var(--bg-card);
+  --foreground: var(--fg);
+  --paper: var(--bg-card);
+  --paper-soft: var(--bg-raised);
+  --ink: var(--fg);
+  --ink-soft: var(--fg-soft);
+  --rule: var(--hr);
+  --muted: var(--bg-raised);
+  --muted-foreground: var(--fg-muted);
 }
 
+/* ── Base ──────────────────────────────────────────────────── */
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--hr);
+    box-sizing: border-box;
   }
+
   html {
     font-family: var(--font-body);
-    background-color: var(--paper);
-    color: var(--ink);
+    background-color: var(--bg);
+    color: var(--fg);
     -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
   }
   body {
-    background-color: var(--paper);
-    color: var(--ink);
+    background-color: var(--bg);
+    color: var(--fg);
   }
+
   h1,
   h2,
   h3,
@@ -52,29 +70,32 @@
     font-weight: 400;
     letter-spacing: 0;
   }
+
   ::selection {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--accent);
+    color: var(--bg);
   }
 }
 
+/* ── Utilities ─────────────────────────────────────────────── */
 @utility hairline {
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--hr);
 }
 
 @utility eyebrow {
   font-family: var(--font-body);
-  font-size: 0.7rem;
-  letter-spacing: 0.28em;
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   font-weight: 500;
-  color: var(--ink-soft);
+  color: var(--fg-soft);
 }
 
+/* ── Animations ────────────────────────────────────────────── */
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -82,88 +103,129 @@
   }
 }
 @utility animate-rise {
-  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.site-shell.theme-warm {
-  --background: #f4f0e8;
-  --paper: #f4f0e8;
-  --paper-soft: #e8dfd2;
-  --ink: #15110d;
-  --ink-soft: #51483f;
-  --rule: rgba(21, 17, 13, 0.14);
-  --muted: #e8dfd2;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.site-shell.theme-noir {
-  --background: #f2f0eb;
-  --paper: #f2f0eb;
-  --paper-soft: #dedbd3;
-  --ink: #111111;
-  --ink-soft: #3d3d3d;
-  --rule: rgba(17, 17, 17, 0.15);
-  --muted: #dedbd3;
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.site-shell.theme-sage {
-  --background: #f0f1ea;
-  --paper: #f0f1ea;
-  --paper-soft: #dfe3d5;
-  --ink: #142017;
-  --ink-soft: #445044;
-  --rule: rgba(20, 32, 23, 0.15);
-  --muted: #dfe3d5;
+@keyframes scroll-pulse {
+  0%,
+  100% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(100%);
+  }
 }
 
-.site-shell.bg-clean {
-  --paper: #f7f5f0;
-  --paper-soft: #ebe7df;
+/* Intersection-observer reveal classes */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+.reveal-delay-3 {
+  transition-delay: 0.35s;
 }
 
-.site-shell.bg-contrast {
-  --paper: #eee7dc;
-  --paper-soft: #ded2c2;
-}
-
+/* ── Hero wash (dark version) ──────────────────────────────── */
 .hero-wash {
   background:
-    radial-gradient(circle at 76% 38%, rgba(255, 255, 255, 0.58), transparent 34%),
+    radial-gradient(ellipse at 72% 40%, rgba(200, 164, 106, 0.05), transparent 55%),
     linear-gradient(
       90deg,
-      var(--paper) 0%,
-      rgba(244, 240, 232, 0.9) 32%,
-      rgba(244, 240, 232, 0.42) 68%,
-      var(--paper) 100%
+      var(--bg) 0%,
+      rgba(11, 10, 9, 0.9) 30%,
+      rgba(11, 10, 9, 0.35) 62%,
+      transparent 100%
     );
-}
-
-.hero-button {
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 2px solid currentColor;
-  color: var(--ink);
-  font-size: 0.78rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
-}
-
-.hero-button:hover {
-  opacity: 0.72;
-  transform: translateY(-1px);
 }
 
 @media (max-width: 767px) {
   .hero-wash {
     background: linear-gradient(
       180deg,
-      rgba(244, 240, 232, 0.8),
-      rgba(244, 240, 232, 0.5) 42%,
-      var(--paper) 100%
+      rgba(11, 10, 9, 0.75) 0%,
+      rgba(11, 10, 9, 0.5) 45%,
+      var(--bg) 100%
     );
   }
+}
+
+/* ── Hero CTA button ───────────────────────────────────────── */
+.hero-button {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--accent);
+  color: var(--fg);
+  font-size: 0.74rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+.hero-button:hover {
+  opacity: 0.68;
+  transform: translateY(-2px);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hr-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-muted);
+}
+
+/* ── Photo card hover overlay ──────────────────────────────── */
+.photo-overlay {
+  background: linear-gradient(to top, rgba(7, 6, 5, 0.88) 0%, rgba(7, 6, 5, 0) 55%);
+}
+
+/* ── Lightbox ──────────────────────────────────────────────── */
+.lightbox-backdrop {
+  animation: fade-in 0.22s ease both;
+}
+.lightbox-img {
+  animation: slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
