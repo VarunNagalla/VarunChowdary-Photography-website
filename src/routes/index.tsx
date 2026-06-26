@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import * as THREE from "three";
 import { supabase } from "@/integrations/supabase/client";
 import {
   defaultContent,
@@ -33,6 +32,37 @@ type StatItem = {
   n: string;
   label: string;
 };
+
+function safeHref(value: string | undefined, fallback = "#") {
+  const trimmed = value?.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith("#") || trimmed.startsWith("/")) return trimmed;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" || url.protocol === "http:" || url.protocol === "mailto:"
+      ? url.toString()
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function safeImageSrc(value: string | null | undefined, fallback = "") {
+  const trimmed = value?.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith("/") || trimmed.startsWith("./")) return trimmed;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function safeMailto(email: string) {
+  const trimmed = email.trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? `mailto:${trimmed}` : undefined;
+}
 
 async function fetchSiteContent(): Promise<ContentMap> {
   const { data, error } = await supabase
@@ -156,7 +186,7 @@ function Hero({
   return (
     <section id="top" className="relative min-h-screen overflow-hidden">
       <img
-        src={heroContent.image_url || defaultContent.hero.image_url || ""}
+        src={safeImageSrc(heroContent.image_url, defaultContent.hero.image_url || "")}
         alt={textValue(heroContent, "image_alt", defaultContent.hero.content.image_alt)}
         className="absolute inset-0 h-full w-full object-cover opacity-22"
       />
@@ -182,7 +212,9 @@ function Hero({
             {textValue(heroContent, "description", defaultContent.hero.content.description)}
           </p>
           <a
-            href={textValue(heroContent, "cta_link", defaultContent.hero.content.cta_link)}
+            href={safeHref(
+              textValue(heroContent, "cta_link", defaultContent.hero.content.cta_link),
+            )}
             className="hero-button"
             style={{ borderColor: settings.accent }}
           >
@@ -206,90 +238,109 @@ function PhotoOrbit({ photos, settings }: { photos: Photo[]; settings: SiteSetti
   useEffect(() => {
     if (!mountRef.current || reducedMotion) return;
     const mount = mountRef.current;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      42,
-      mount.clientWidth / mount.clientHeight,
-      0.1,
-      100,
-    );
-    camera.position.set(0, 0, 8);
+    let disposed = false;
+    let cleanup: (() => void) | undefined;
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    mount.appendChild(renderer.domElement);
-
-    const group = new THREE.Group();
-    scene.add(group);
-    const loader = new THREE.TextureLoader();
-    const selected = photos.filter((_, index) => index !== 5).slice(0, 6);
-    selected.forEach((photo, index) => {
-      const texture = loader.load(photo.src);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      const material = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        opacity: 0.9,
-      });
-      const geometry = new THREE.PlaneGeometry(1.45, 1.9);
-      const mesh = new THREE.Mesh(geometry, material);
-      const angle = (index / selected.length) * Math.PI * 2;
-      const radius = index % 2 === 0 ? 2.8 : 3.6;
-      mesh.position.set(
-        Math.cos(angle) * radius,
-        Math.sin(angle * 1.4) * 1.2,
-        Math.sin(angle) * 1.15,
+    import("three").then((THREE) => {
+      if (disposed || !mount.isConnected) return;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        42,
+        mount.clientWidth / mount.clientHeight,
+        0.1,
+        100,
       );
-      mesh.rotation.set(0.08 * Math.sin(angle), -angle * 0.18, 0.05 * Math.cos(angle));
-      group.add(mesh);
+      camera.position.set(0, 0, 8);
+
+      const renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: window.devicePixelRatio <= 1.5,
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
+      mount.appendChild(renderer.domElement);
+
+      const group = new THREE.Group();
+      scene.add(group);
+      const loader = new THREE.TextureLoader();
+      const selected = photos.filter((_, index) => index !== 5).slice(0, 6);
+      selected.forEach((photo, index) => {
+        const texture = loader.load(safeImageSrc(photo.src, photo.src));
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 0.9,
+        });
+        const geometry = new THREE.PlaneGeometry(1.45, 1.9);
+        const mesh = new THREE.Mesh(geometry, material);
+        const angle = (index / selected.length) * Math.PI * 2;
+        const radius = index % 2 === 0 ? 2.8 : 3.6;
+        mesh.position.set(
+          Math.cos(angle) * radius,
+          Math.sin(angle * 1.4) * 1.2,
+          Math.sin(angle) * 1.15,
+        );
+        mesh.rotation.set(0.08 * Math.sin(angle), -angle * 0.18, 0.05 * Math.cos(angle));
+        group.add(mesh);
+      });
+
+      const speed =
+        settings.animationIntensity === "cinematic"
+          ? 0.0023
+          : settings.animationIntensity === "calm"
+            ? 0.0009
+            : 0.0015;
+      const pointer = { x: 0, y: 0 };
+      const onPointer = (event: PointerEvent) => {
+        pointer.x = (event.clientX / window.innerWidth - 0.5) * 0.55;
+        pointer.y = (event.clientY / window.innerHeight - 0.5) * 0.35;
+      };
+      window.addEventListener("pointermove", onPointer, { passive: true });
+
+      let frame = 0;
+      const animate = () => {
+        group.rotation.y += speed;
+        group.rotation.x += (pointer.y - group.rotation.x) * 0.025;
+        camera.position.x += (pointer.x - camera.position.x) * 0.025;
+        renderer.render(scene, camera);
+        frame = requestAnimationFrame(animate);
+      };
+      animate();
+
+      const resize = () => {
+        if (!mount.clientWidth || !mount.clientHeight) return;
+        camera.aspect = mount.clientWidth / mount.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(mount.clientWidth, mount.clientHeight);
+      };
+      window.addEventListener("resize", resize);
+
+      cleanup = () => {
+        cancelAnimationFrame(frame);
+        window.removeEventListener("pointermove", onPointer);
+        window.removeEventListener("resize", resize);
+        renderer.dispose();
+        group.traverse((object) => {
+          if ("isMesh" in object && object.isMesh) {
+            const mesh = object as {
+              geometry: { dispose: () => void };
+              material: { map?: { dispose: () => void }; dispose: () => void };
+            };
+            mesh.geometry.dispose();
+            mesh.material.map?.dispose();
+            mesh.material.dispose();
+          }
+        });
+        if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
+      };
+
+      if (disposed) cleanup();
     });
 
-    const speed =
-      settings.animationIntensity === "cinematic"
-        ? 0.0023
-        : settings.animationIntensity === "calm"
-          ? 0.0009
-          : 0.0015;
-    const pointer = { x: 0, y: 0 };
-    const onPointer = (event: PointerEvent) => {
-      pointer.x = (event.clientX / window.innerWidth - 0.5) * 0.55;
-      pointer.y = (event.clientY / window.innerHeight - 0.5) * 0.35;
-    };
-    window.addEventListener("pointermove", onPointer, { passive: true });
-
-    let frame = 0;
-    const animate = () => {
-      group.rotation.y += speed;
-      group.rotation.x += (pointer.y - group.rotation.x) * 0.025;
-      camera.position.x += (pointer.x - camera.position.x) * 0.025;
-      renderer.render(scene, camera);
-      frame = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const resize = () => {
-      if (!mount.clientWidth || !mount.clientHeight) return;
-      camera.aspect = mount.clientWidth / mount.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(mount.clientWidth, mount.clientHeight);
-    };
-    window.addEventListener("resize", resize);
-
     return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("pointermove", onPointer);
-      window.removeEventListener("resize", resize);
-      renderer.dispose();
-      group.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          const material = object.material as THREE.MeshBasicMaterial;
-          material.map?.dispose();
-          material.dispose();
-        }
-      });
-      mount.removeChild(renderer.domElement);
+      disposed = true;
+      cleanup?.();
     };
   }, [photos, reducedMotion, settings.animationIntensity]);
 
@@ -299,7 +350,7 @@ function PhotoOrbit({ photos, settings }: { photos: Photo[]; settings: SiteSetti
         {photos.slice(0, 4).map((photo) => (
           <img
             key={photo.src}
-            src={photo.src}
+            src={safeImageSrc(photo.src, photo.src)}
             alt={photo.alt}
             className="h-full w-full object-cover"
           />
@@ -361,7 +412,7 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
     <figure className="group">
       <div className="overflow-hidden bg-muted">
         <img
-          src={photo.src}
+          src={safeImageSrc(photo.src, photo.src)}
           alt={photo.alt}
           width={photo.w}
           height={photo.h}
@@ -392,7 +443,7 @@ function About({ aboutContent }: { aboutContent: SiteContentRow }) {
       <div className="mx-auto max-w-[1440px] px-5 md:px-10 grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16 items-start">
         <div className="md:col-span-5">
           <img
-            src={aboutContent.image_url || defaultContent.about.image_url || ""}
+            src={safeImageSrc(aboutContent.image_url, defaultContent.about.image_url || "")}
             alt={textValue(aboutContent, "image_alt", defaultContent.about.content.image_alt)}
             width={960}
             height={1280}
@@ -487,7 +538,7 @@ function Contact({ contactContent }: { contactContent: SiteContentRow }) {
               defaultContent.contact.content.email_label,
             )}
             value={email}
-            href={email ? `mailto:${email}` : undefined}
+            href={safeMailto(email)}
           />
           <ContactBlock
             label={textValue(
@@ -496,7 +547,7 @@ function Contact({ contactContent }: { contactContent: SiteContentRow }) {
               defaultContent.contact.content.instagram_label,
             )}
             value={textValue(contactContent, "instagram", defaultContent.contact.content.instagram)}
-            href={instagramLink}
+            href={safeHref(instagramLink, "")}
           />
         </div>
       </div>

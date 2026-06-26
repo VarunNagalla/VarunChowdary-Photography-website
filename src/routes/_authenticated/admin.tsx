@@ -31,6 +31,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const SIGNED_URL_EXPIRY = 60 * 60 * 24 * 365;
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
 const contentSections: ContentSectionConfig[] = [
   {
@@ -172,6 +174,7 @@ function numberValue(value: string, fallback = 0) {
 }
 
 async function uploadPrivateImage(file: File, folder: string) {
+  validateImageFile(file);
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
@@ -188,6 +191,15 @@ async function uploadPrivateImage(file: File, folder: string) {
   if (signError || !signed) throw signError ?? new Error("Failed to create image URL");
 
   return { path, signedUrl: signed.signedUrl };
+}
+
+function validateImageFile(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new Error(`${file.name} must be a JPG, PNG, WebP, or AVIF image`);
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error(`${file.name} is too large. Keep each image under 15 MB.`);
+  }
 }
 
 function AdminPage() {
@@ -651,7 +663,7 @@ function UploadForm({ onDone }: { onDone: () => void }) {
       const rows = [];
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
-        if (!file.type.startsWith("image/")) throw new Error(`${file.name} is not an image`);
+        validateImageFile(file);
         setProgress(`Uploading ${index + 1} of ${files.length}`);
         const dims = await readImageDimensions(file);
         const uploaded = await uploadPrivateImage(file, "gallery");

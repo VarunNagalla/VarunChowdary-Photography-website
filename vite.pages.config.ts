@@ -9,5 +9,17 @@ export default defineConfig({
   build: {
     outDir: ".output/public",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("three")) return "three";
+          if (id.includes("@supabase")) return "supabase";
+          if (id.includes("@tanstack")) return "router";
+          if (id.includes("react")) return "react";
+          return "vendor";
+        },
+      },
+    },
   },
 });
