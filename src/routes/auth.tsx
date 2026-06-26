@@ -99,8 +99,19 @@ function AuthPage() {
                 name="email"
                 type="email"
                 required
+                autoFocus
                 autoComplete="username"
-                className="w-full bg-transparent border-b border-rule focus:border-ink outline-none py-3 text-lg font-display"
+                placeholder="you@example.com"
+                className="w-full rounded px-4 py-3 text-base"
+                style={{
+                  background: "rgba(242,237,229,0.07)",
+                  border: "1px solid rgba(242,237,229,0.25)",
+                  color: "#f2ede5",
+                  outline: "none",
+                  caretColor: "#c8a46a",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(242,237,229,0.70)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(242,237,229,0.25)")}
               />
             </label>
             <label className="block">
@@ -111,7 +122,17 @@ function AuthPage() {
                 required
                 minLength={8}
                 autoComplete="current-password"
-                className="w-full bg-transparent border-b border-rule focus:border-ink outline-none py-3 text-lg font-display"
+                placeholder="••••••••"
+                className="w-full rounded px-4 py-3 text-base"
+                style={{
+                  background: "rgba(242,237,229,0.07)",
+                  border: "1px solid rgba(242,237,229,0.25)",
+                  color: "#f2ede5",
+                  outline: "none",
+                  caretColor: "#c8a46a",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(242,237,229,0.70)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(242,237,229,0.25)")}
               />
             </label>
 
