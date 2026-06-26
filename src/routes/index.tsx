@@ -415,7 +415,7 @@ function Contact({ contactContent }: { contactContent: SiteContentRow }) {
           </em>
         </h2>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
           <ContactBlock
             label={textValue(contactContent, "email_label", defaultContent.contact.content.email_label)}
             value={email}
@@ -425,10 +425,6 @@ function Contact({ contactContent }: { contactContent: SiteContentRow }) {
             label={textValue(contactContent, "instagram_label", defaultContent.contact.content.instagram_label)}
             value={textValue(contactContent, "instagram", defaultContent.contact.content.instagram)}
             href={instagramLink}
-          />
-          <ContactBlock
-            label={textValue(contactContent, "studio_label", defaultContent.contact.content.studio_label)}
-            value={textValue(contactContent, "studio", defaultContent.contact.content.studio)}
           />
         </div>
       </div>
