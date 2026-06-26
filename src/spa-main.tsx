@@ -18,7 +18,10 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient },
-  basepath: import.meta.env.VITE_ROUTER_BASEPATH ?? "/VarunChowdary-Photography-website",
+  // BASE_URL is always "/" for Vercel build (base:"/") and
+  // "/VarunChowdary-Photography-website/" for GitHub Pages build.
+  // Strip the trailing slash to get the correct router basepath.
+  basepath: import.meta.env.BASE_URL === "/" ? "/" : import.meta.env.BASE_URL.replace(/\/$/, ""),
   scrollRestoration: true,
   defaultPreloadStaleTime: 0,
 });

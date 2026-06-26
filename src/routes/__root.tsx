@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   HeadContent,
   Link,
-  Navigate,
   Outlet,
   Scripts,
   createRootRouteWithContext,
@@ -73,7 +72,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  notFoundComponent: () => <Navigate to="/" replace />,
+  notFoundComponent: NotFoundComponent,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
