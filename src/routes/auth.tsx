@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_EMAIL } from "@/lib/site-config";
 
+const AUTH_CHECK_TIMEOUT_MS = 5000;
+
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [{ title: "Admin sign in | VC Photography" }, { name: "robots", content: "noindex" }],
@@ -16,10 +18,33 @@ function AuthPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/admin" });
-    });
+    let active = true;
+    withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS)
+      .then(({ data }) => {
+        if (active && data.user) navigate({ to: "/admin" });
+      })
+      .catch(() => {
+        // A slow session check should never block typing into the sign-in form.
+      });
+    return () => {
+      active = false;
+    };
   }, [navigate]);
+
+  async function resetSession() {
+    setError(null);
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+      Object.keys(localStorage)
+        .filter((key) => key.includes("supabase") || key.startsWith("sb-"))
+        .forEach((key) => localStorage.removeItem(key));
+      window.location.href = `${import.meta.env.BASE_URL}auth?reset=${Date.now()}`;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reset the session");
+      setLoading(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,8 +129,25 @@ function AuthPage() {
           <p className="mt-10 text-xs text-ink-soft leading-relaxed">
             Admin access is restricted to the site owner. Visitors never see this page.
           </p>
+          <button
+            type="button"
+            onClick={resetSession}
+            disabled={loading}
+            className="mt-4 text-xs tracking-[0.18em] uppercase text-ink-soft underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
+          >
+            Reset sign-in session
+          </button>
         </div>
       </main>
     </div>
   );
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error("Request timed out")), ms);
+    }),
+  ]);
 }

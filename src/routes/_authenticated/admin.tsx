@@ -234,6 +234,7 @@ function AdminPage() {
   } = useQuery({
     queryKey: ["photos", photoLimit],
     queryFn: () => fetchPhotos(photoLimit),
+    enabled: isAdmin === true,
     retry: 1,
     staleTime: 30_000,
   });
@@ -244,6 +245,7 @@ function AdminPage() {
   } = useQuery({
     queryKey: ["admin-site-content"],
     queryFn: fetchSiteContent,
+    enabled: isAdmin === true,
     retry: 1,
     staleTime: 30_000,
   });
@@ -254,6 +256,7 @@ function AdminPage() {
   } = useQuery({
     queryKey: ["admin-site-settings"],
     queryFn: fetchSettings,
+    enabled: isAdmin === true,
     retry: 1,
     staleTime: 30_000,
   });
@@ -327,6 +330,15 @@ function AdminPage() {
           </div>
         )}
 
+        {isAdmin === null && (
+          <div className="mb-10 border border-rule bg-paper-soft p-6">
+            <p className="font-display text-xl mb-2">Checking owner access</p>
+            <p className="text-sm text-ink-soft">
+              The editor will load as soon as your admin session is confirmed.
+            </p>
+          </div>
+        )}
+
         <div className="mb-10 flex flex-wrap gap-3">
           <TabButton active={activeTab === "content"} onClick={() => setActiveTab("content")}>
             Content
@@ -339,7 +351,7 @@ function AdminPage() {
           </TabButton>
         </div>
 
-        {activeTab === "content" && (
+        {isAdmin === true && activeTab === "content" && (
           <section>
             {contentError ? (
               <ErrorPanel title="Content could not load" message={errorMessage(contentError)} />
@@ -377,7 +389,8 @@ function AdminPage() {
           </section>
         )}
 
-        {activeTab === "design" &&
+        {isAdmin === true &&
+          activeTab === "design" &&
           (settingsError ? (
             <ErrorPanel
               title="Design settings could not load"
@@ -393,7 +406,7 @@ function AdminPage() {
             />
           ))}
 
-        {activeTab === "gallery" && (
+        {isAdmin === true && activeTab === "gallery" && (
           <section>
             {isAdmin && (
               <UploadForm onDone={() => qc.invalidateQueries({ queryKey: ["photos"] })} />
