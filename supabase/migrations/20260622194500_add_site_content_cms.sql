@@ -79,50 +79,50 @@ CREATE TRIGGER site_content_set_updated_at
 INSERT INTO public.site_content (section_key, content)
 VALUES
   ('hero', '{
-    "eyebrow": "Photographer · est. 2016",
-    "title": "Quiet light,",
-    "italic_title": "honest frames.",
-    "description": "A continuing study of people, places, and the in-between moments — collected on film and digital across four continents.",
-    "cta_text": "View Selected Work",
+    "eyebrow": "Personal photography portfolio",
+    "title": "Moments I captured,",
+    "italic_title": "the way I saw them.",
+    "description": "This is a personal collection of photos I''ve taken through my lens. Each image is a moment, place, or detail I wanted to remember and share.",
+    "cta_text": "View My Work",
     "cta_link": "#work",
     "image_alt": "Foggy forest"
   }'::jsonb),
   ('work', '{
-    "eyebrow": "Selected · ongoing",
-    "title": "A small archive,",
-    "italic_title": "carefully chosen.",
-    "description": "Frames from a larger ongoing body of work. Full series available on request."
+    "eyebrow": "Favorite frames",
+    "title": "Photos I captured",
+    "italic_title": "because they stayed with me.",
+    "description": "These are some of my favorite frames, chosen for their mood, light, place, detail, and the memory behind each picture."
   }'::jsonb),
   ('about', '{
-    "eyebrow": "About — Varun Nagalla",
-    "title": "I make pictures",
-    "italic_title": "that feel like memory.",
-    "paragraph_1": "I''m a photographer based between Hyderabad and Lisbon, working with editorial clients, couples, and brands who care about the slow, the unhurried, the slightly imperfect.",
-    "paragraph_2": "My work has appeared in independent magazines and gallery group shows across Europe and Asia. I shoot mostly with a 35mm prime and natural light, and I print everything I love.",
-    "image_alt": "Portrait of Varun Nagalla",
+    "eyebrow": "About Varun",
+    "title": "I see the world",
+    "italic_title": "through a camera.",
+    "paragraph_1": "I''m Varun, a passionate photographer who enjoys capturing moments, places, people, light, and small details that usually go unnoticed. Photography is something I do because I genuinely love seeing the world through a camera.",
+    "paragraph_2": "This website is a personal space for the images I''ve taken. Every photo here is part of my journey, my perspective, and the way I choose to remember a moment.",
+    "image_alt": "Portrait for VC Photography",
     "stats": [
       {"n": "08+", "label": "Years working"},
       {"n": "140", "label": "Stories told"},
-      {"n": "22", "label": "Countries"},
-      {"n": "04", "label": "Print editions"}
+      {"n": "100%", "label": "Captured by me"},
+      {"n": "VC", "label": "Photography"}
     ]
   }'::jsonb),
   ('contact', '{
-    "eyebrow": "Commissions & prints",
-    "title": "Have a story",
-    "italic_title": "worth photographing?",
+    "eyebrow": "Connect",
+    "title": "Like my photos?",
+    "italic_title": "Let''s connect.",
     "email_label": "Write",
-    "email": "hello@varunnagalla.com",
+    "email": "varunchowdary3345@gmail.com",
     "instagram_label": "Instagram",
-    "instagram": "@varun.frames",
+    "instagram": "@vc.photography",
     "instagram_link": "https://instagram.com",
-    "studio_label": "Studio",
-    "studio": "Lisbon · Hyderabad"
+    "Location_label": "Location",
+    "studio": "Personal portfolio"
   }'::jsonb),
   ('footer', '{
-    "brand_name": "Varun Nagalla",
-    "commission_text": "Commission",
-    "copyright_text": "Varun Nagalla. All rights reserved.",
-    "protection_text": "All images protected by copyright."
+    "brand_name": "VC Photography",
+    "Connect_text": "Connect",
+    "copyright_text": "VC Photography. All rights reserved.",
+    "protection_text": "All photos shown here are captured and shared as part of my personal photography portfolio."
   }'::jsonb)
 ON CONFLICT (section_key) DO NOTHING;

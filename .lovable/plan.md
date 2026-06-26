@@ -1,9 +1,11 @@
 ## Goal
+
 Rewrite the public site copy in a personal, honest tone and drop the Studio block from the Contact section. All editable copy lives in the `site_content` table, so this is mostly a data update plus one small frontend change.
 
 ## Changes
 
 ### 1. Update `site_content` rows (SQL update, no schema change)
+
 Overwrite the `content` JSON for these sections:
 
 - **hero**
@@ -43,12 +45,15 @@ Overwrite the `content` JSON for these sections:
   - commission_text: `Connect` (replaces "Commission" CTA in header)
 
 ### 2. Frontend: remove the Studio block from Contact (`src/routes/index.tsx`)
+
 - Delete the third `<ContactBlock />` (Studio) inside the `Contact` component.
 - Change the contact grid from `md:grid-cols-3` → `md:grid-cols-2` so the two remaining blocks (Write / Instagram) lay out cleanly.
 - No other components touched. Header, Hero, Work, About, Footer remain wired to Supabase content as today.
 
 ### 3. Admin dashboard
+
 No code changes needed — the `/admin` Website Content editor already exposes every field above, so once the seed is updated you can keep editing each field freely from `/admin`.
 
 ### Out of scope
+
 - The earlier admin "page didn't load" issue (RLS / `has_role` permission) and the "restrict admin to one user" request are not part of this turn. Say the word and I'll do them next.

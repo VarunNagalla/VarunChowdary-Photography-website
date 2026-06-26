@@ -19,15 +19,15 @@
 }
 
 :root {
-  --background: #f5f3ee;
-  --foreground: #0d0d0d;
-  --paper: #f5f3ee;
-  --paper-soft: #e8e4dd;
-  --ink: #0d0d0d;
-  --ink-soft: #2d2d2d;
-  --rule: rgba(13, 13, 13, 0.12);
-  --muted: #e8e4dd;
-  --muted-foreground: #6b6660;
+  --background: #f4f0e8;
+  --foreground: #15110d;
+  --paper: #f4f0e8;
+  --paper-soft: #e8dfd2;
+  --ink: #15110d;
+  --ink-soft: #51483f;
+  --rule: rgba(21, 17, 13, 0.14);
+  --muted: #e8dfd2;
+  --muted-foreground: #70675d;
 }
 
 @layer base {
@@ -44,10 +44,13 @@
     background-color: var(--paper);
     color: var(--ink);
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     font-weight: 400;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
   ::selection {
     background: var(--ink);
@@ -69,9 +72,98 @@
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @utility animate-rise {
   animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.site-shell.theme-warm {
+  --background: #f4f0e8;
+  --paper: #f4f0e8;
+  --paper-soft: #e8dfd2;
+  --ink: #15110d;
+  --ink-soft: #51483f;
+  --rule: rgba(21, 17, 13, 0.14);
+  --muted: #e8dfd2;
+}
+
+.site-shell.theme-noir {
+  --background: #f2f0eb;
+  --paper: #f2f0eb;
+  --paper-soft: #dedbd3;
+  --ink: #111111;
+  --ink-soft: #3d3d3d;
+  --rule: rgba(17, 17, 17, 0.15);
+  --muted: #dedbd3;
+}
+
+.site-shell.theme-sage {
+  --background: #f0f1ea;
+  --paper: #f0f1ea;
+  --paper-soft: #dfe3d5;
+  --ink: #142017;
+  --ink-soft: #445044;
+  --rule: rgba(20, 32, 23, 0.15);
+  --muted: #dfe3d5;
+}
+
+.site-shell.bg-clean {
+  --paper: #f7f5f0;
+  --paper-soft: #ebe7df;
+}
+
+.site-shell.bg-contrast {
+  --paper: #eee7dc;
+  --paper-soft: #ded2c2;
+}
+
+.hero-wash {
+  background:
+    radial-gradient(circle at 76% 38%, rgba(255, 255, 255, 0.58), transparent 34%),
+    linear-gradient(
+      90deg,
+      var(--paper) 0%,
+      rgba(244, 240, 232, 0.9) 32%,
+      rgba(244, 240, 232, 0.42) 68%,
+      var(--paper) 100%
+    );
+}
+
+.hero-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid currentColor;
+  color: var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.hero-button:hover {
+  opacity: 0.72;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 767px) {
+  .hero-wash {
+    background: linear-gradient(
+      180deg,
+      rgba(244, 240, 232, 0.8),
+      rgba(244, 240, 232, 0.5) 42%,
+      var(--paper) 100%
+    );
+  }
 }
