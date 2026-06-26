@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_EMAIL } from "@/lib/site-config";
 
@@ -16,20 +16,20 @@ function AuthPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
-    let active = true;
+    if (checkedRef.current) return;
+    checkedRef.current = true;
     withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS)
       .then(({ data }) => {
-        if (active && data.user) navigate({ to: "/admin" });
+        if (data.user) navigate({ to: "/admin" });
       })
       .catch(() => {
         // A slow session check should never block typing into the sign-in form.
       });
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function resetSession() {
     setError(null);
