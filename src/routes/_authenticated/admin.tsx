@@ -8,6 +8,7 @@ import { ADMIN_EMAIL, defaultSettings, type SiteSettings } from "@/lib/site-conf
 type Photo = Tables<"photos">;
 type SiteContent = Tables<"site_content">;
 type AdminTab = "content" | "design" | "gallery";
+type PhotosResult = { photos: Photo[]; total: number };
 
 type ContentField = {
   name: string;
@@ -33,6 +34,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const SIGNED_URL_EXPIRY = 60 * 60 * 24 * 365;
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+const ADMIN_PHOTO_PAGE_SIZE = 24;
+const ADMIN_AUTH_TIMEOUT_MS = 8000;
 
 const contentSections: ContentSectionConfig[] = [
   {
@@ -114,14 +117,15 @@ const contentSections: ContentSectionConfig[] = [
   },
 ];
 
-async function fetchPhotos(): Promise<Photo[]> {
-  const { data, error } = await supabase
+async function fetchPhotos(limit: number): Promise<PhotosResult> {
+  const { data, error, count } = await supabase
     .from("photos")
-    .select("*")
+    .select("*", { count: "exact" })
     .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(0, Math.max(limit - 1, 0));
   if (error) throw error;
-  return data ?? [];
+  return { photos: data ?? [], total: count ?? data?.length ?? 0 };
 }
 
 async function fetchSiteContent(): Promise<SiteContent[]> {
@@ -202,31 +206,73 @@ function validateImageFile(file: File) {
   }
 }
 
+function errorMessage(error: unknown) {
+  return error instanceof Error
+    ? error.message
+    : "Something went wrong. Please refresh and try again.";
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error("Request timed out")), ms);
+    }),
+  ]);
+}
+
 function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data: photos = [], isLoading: photosLoading } = useQuery({
-    queryKey: ["photos"],
-    queryFn: fetchPhotos,
+  const [photoLimit, setPhotoLimit] = useState(ADMIN_PHOTO_PAGE_SIZE);
+  const {
+    data: photosData = { photos: [], total: 0 },
+    isLoading: photosLoading,
+    isFetching: photosFetching,
+    error: photosError,
+  } = useQuery({
+    queryKey: ["photos", photoLimit],
+    queryFn: () => fetchPhotos(photoLimit),
+    retry: 1,
+    staleTime: 30_000,
   });
-  const { data: siteContent = [], isLoading: contentLoading } = useQuery({
+  const {
+    data: siteContent = [],
+    isLoading: contentLoading,
+    error: contentError,
+  } = useQuery({
     queryKey: ["admin-site-content"],
     queryFn: fetchSiteContent,
+    retry: 1,
+    staleTime: 30_000,
   });
-  const { data: settings = defaultSettings, isLoading: settingsLoading } = useQuery({
+  const {
+    data: settings = defaultSettings,
+    isLoading: settingsLoading,
+    error: settingsError,
+  } = useQuery({
     queryKey: ["admin-site-settings"],
     queryFn: fetchSettings,
+    retry: 1,
+    staleTime: 30_000,
   });
+  const photos = photosData.photos;
+  const totalPhotos = photosData.total;
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>("content");
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const email = u.user?.email?.toLowerCase() ?? null;
-      setAdminEmail(email);
-      setIsAdmin(email === ADMIN_EMAIL);
+      try {
+        const { data: u } = await withTimeout(supabase.auth.getUser(), ADMIN_AUTH_TIMEOUT_MS);
+        const email = u.user?.email?.toLowerCase() ?? null;
+        setAdminEmail(email);
+        setIsAdmin(email === ADMIN_EMAIL);
+      } catch {
+        setAdminEmail(null);
+        setIsAdmin(false);
+      }
     })();
   }, []);
 
@@ -289,7 +335,9 @@ function AdminPage() {
 
         {activeTab === "content" && (
           <section>
-            {contentLoading ? (
+            {contentError ? (
+              <ErrorPanel title="Content could not load" message={errorMessage(contentError)} />
+            ) : contentLoading ? (
               <p className="text-ink-soft">Loading content</p>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -308,7 +356,12 @@ function AdminPage() {
         )}
 
         {activeTab === "design" &&
-          (settingsLoading ? (
+          (settingsError ? (
+            <ErrorPanel
+              title="Design settings could not load"
+              message={errorMessage(settingsError)}
+            />
+          ) : settingsLoading ? (
             <p className="text-ink-soft">Loading settings</p>
           ) : (
             <SettingsEditor
@@ -326,24 +379,38 @@ function AdminPage() {
             <div className="hairline mt-16 pt-12">
               <h2 className="font-display text-3xl mb-2">Current gallery</h2>
               <p className="text-sm text-ink-soft mb-8">
-                {photos.length} {photos.length === 1 ? "photo" : "photos"}. Hidden photos do not
-                appear on the public site.
+                Showing {photos.length} of {totalPhotos} {totalPhotos === 1 ? "photo" : "photos"}.
+                Hidden photos do not appear on the public site.
               </p>
-              {photosLoading ? (
+              {photosError ? (
+                <ErrorPanel title="Gallery could not load" message={errorMessage(photosError)} />
+              ) : photosLoading ? (
                 <p className="text-ink-soft">Loading</p>
               ) : photos.length === 0 ? (
                 <p className="text-ink-soft">No photos yet. Upload your first frame above.</p>
               ) : (
-                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {photos.map((photo) => (
-                    <PhotoItem
-                      key={photo.id}
-                      photo={photo}
-                      canEdit={!!isAdmin}
-                      onChange={() => qc.invalidateQueries({ queryKey: ["photos"] })}
-                    />
-                  ))}
-                </ul>
+                <>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {photos.map((photo) => (
+                      <PhotoItem
+                        key={photo.id}
+                        photo={photo}
+                        canEdit={!!isAdmin}
+                        onChange={() => qc.invalidateQueries({ queryKey: ["photos"] })}
+                      />
+                    ))}
+                  </ul>
+                  {photos.length < totalPhotos && (
+                    <button
+                      type="button"
+                      disabled={photosFetching}
+                      onClick={() => setPhotoLimit((current) => current + ADMIN_PHOTO_PAGE_SIZE)}
+                      className="mt-8 border border-ink px-8 py-3 text-[0.78rem] tracking-[0.22em] uppercase hover:bg-ink hover:text-paper disabled:opacity-50"
+                    >
+                      {photosFetching ? "Loading" : "Load more photos"}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </section>
@@ -370,6 +437,15 @@ function TabButton({
     >
       {children}
     </button>
+  );
+}
+
+function ErrorPanel({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="border border-red-700/30 bg-red-50 p-6 text-red-900">
+      <p className="font-display text-xl mb-2">{title}</p>
+      <p className="text-sm leading-relaxed">{message}</p>
+    </div>
   );
 }
 
@@ -449,6 +525,10 @@ function ContentSectionEditor({
               src={row.image_url}
               alt="Current section"
               className="w-full aspect-square object-cover"
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
             />
           ) : (
             <div className="w-full aspect-square bg-muted" />
@@ -857,9 +937,9 @@ function PhotoItem({
   onChange: () => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(photo.title);
-  const [place, setPlace] = useState(photo.place);
-  const [year, setYear] = useState(photo.year);
+  const [title, setTitle] = useState(photo.title ?? "");
+  const [place, setPlace] = useState(photo.place ?? "");
+  const [year, setYear] = useState(photo.year ?? "");
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [sortOrder, setSortOrder] = useState(String(photo.sort_order ?? 0));
   const [isPublished, setIsPublished] = useState(photo.is_published ?? true);
@@ -903,9 +983,12 @@ function PhotoItem({
     <li className="flex flex-col border border-rule">
       <img
         src={photo.image_url}
-        alt={photo.alt_text}
+        alt={photo.alt_text ?? photo.title ?? "Gallery photo"}
         className="w-full aspect-[4/5] object-cover"
         loading="lazy"
+        onError={(event) => {
+          event.currentTarget.style.display = "none";
+        }}
       />
       <div className="p-4 flex flex-col gap-3">
         {editing ? (
