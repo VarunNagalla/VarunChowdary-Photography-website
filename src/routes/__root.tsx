@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   HeadContent,
   Link,
+  Navigate,
   Outlet,
   Scripts,
   createRootRouteWithContext,
-  redirect,
   useRouter,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -73,9 +73,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  notFoundComponent: () => {
-    throw redirect({ to: "/" });
-  },
+  notFoundComponent: () => <Navigate to="/" replace />,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
