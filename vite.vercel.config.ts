@@ -6,6 +6,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   base: "/",
   plugins: [react(), tailwindcss(), tsconfigPaths()],
+  define: {
+    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+      "https://yydbvwqvmeuusolonobp.supabase.co",
+    ),
+    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+      "sb_publishable_BydtLEStKwIpDciqCxxzVQ_FYuvYp7y",
+    ),
+  },
   build: {
     outDir: ".output/vercel",
     emptyOutDir: true,

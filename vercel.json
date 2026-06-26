@@ -1,8 +1,5 @@
 {
   "buildCommand": "vite build --config vite.vercel.config.ts",
   "outputDirectory": ".output/vercel",
-  "env": {
-    "VITE_ROUTER_BASEPATH": "/"
-  },
   "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }]
 }
