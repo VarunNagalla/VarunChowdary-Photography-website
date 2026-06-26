@@ -225,6 +225,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [adminEmail, setAdminEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>("content");
+  const [activeContentSection, setActiveContentSection] = useState<ContentSectionKey>("hero");
   const [photoLimit, setPhotoLimit] = useState(ADMIN_PHOTO_PAGE_SIZE);
   const {
     data: photosData = { photos: [], total: 0 },
@@ -262,10 +266,6 @@ function AdminPage() {
   });
   const photos = photosData.photos;
   const totalPhotos = photosData.total;
-  const [adminEmail, setAdminEmail] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<AdminTab>("content");
-  const [activeContentSection, setActiveContentSection] = useState<ContentSectionKey>("hero");
   const selectedContentConfig =
     contentSections.find((section) => section.key === activeContentSection) ?? contentSections[0];
 
